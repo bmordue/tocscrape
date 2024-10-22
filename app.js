@@ -1,21 +1,21 @@
 const cheerio = require('cheerio');
 
-function parseIssueDetails(html) {
-  const $ = cheerio.load(html);
+async function fetchAndparseIssueDetails(url) {
+  const $ = await cheerio.fromUrl(url);
 
   // TOC
   // articles
 }
 
-function main() {
-  const response = await fetch("https://nph.onlinelibrary.wiley.com/");
+async function main() {
+  const host = "https://nph.onlinelibrary.wiley.com/";
+  const response = await fetch(host);
   const html = await response.text();
   const $ = cheerio.load(html);
   
-  const latestIssueUrl = $('ul.mostRecent > li.cover-image > div.hasDetails > a').attr('href');
+  const latestIssuePath = $('ul.mostRecent > li.cover-image > div.hasDetails > a').attr('href');
   
-  const latestIssueHtml = await fetch(latestIssueUrl);
-  parseIssueDetails(latestIssueHtml);
+  fetchAndparseIssueDetails(`${host}${latestIssuePath}`);
 }
 
 main();
