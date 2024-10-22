@@ -4,7 +4,23 @@ async function fetchAndparseIssueDetails(url) {
   const $ = await cheerio.fromUrl(url);
 
   // TOC
+  await writeLatestTocFile();
+  
   // articles
+  const articles = [];
+  // clear last issue's articles
+  await removeAllArticles();
+  await Promise.all(articles.forEach(writeArticleFile));
+}
+
+async function writeLatestTocFile(content) {
+  
+}
+
+async function removeAllArticles() {
+}
+
+async function writeArticleFile(content) {
 }
 
 async function main() {
