@@ -1,0 +1,58 @@
+name: Social Media Post
+
+on:
+  push:
+    paths:
+      - 'LATEST'
+    branches:
+      - main
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    
+    # Only run if LATEST file was updated (not just created)
+    if: github.event.commits[0].message != 'Initial commit'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Post to social media
+      run: npm run post
+      env:
+        LOG_LEVEL: info
+        TWITTER_ENABLED: ${{ secrets.TWITTER_ENABLED || 'false' }}
+        MASTODON_ENABLED: ${{ secrets.MASTODON_ENABLED || 'false' }}
+        LINKEDIN_ENABLED: ${{ secrets.LINKEDIN_ENABLED || 'false' }}
+        # Add API credentials as secrets when ready to integrate
+        # TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+        # TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+        # TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+        # TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+        # MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+        # MASTODON_INSTANCE: ${{ secrets.MASTODON_INSTANCE }}
+        # LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+    
+    - name: Create issue on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'Social media posting failed',
+            body: `The social media posting workflow failed on ${new Date().toISOString()}.\n\nPlease check the [workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId}) for details.`,
+            labels: ['bug', 'automation', 'social-media']
+          })
